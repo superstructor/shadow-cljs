@@ -18,9 +18,6 @@ jobs:
     steps:
       - checkout
 
-      - run: id
-      - run: pwd
-
       - restore_cache:
           keys:
           - m2-deps-{{ checksum "project.clj" }}
@@ -32,6 +29,5 @@ jobs:
           paths:
             - ~/.m2
           key: m2-deps-{{ checksum "project.clj" }}
-
 
       - run: lein test
