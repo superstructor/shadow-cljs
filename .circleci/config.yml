@@ -18,6 +18,9 @@ jobs:
     steps:
       - checkout
 
+      - run: id
+      - run: pwd
+
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "project.clj" }}
