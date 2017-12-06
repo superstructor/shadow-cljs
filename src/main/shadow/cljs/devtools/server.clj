@@ -22,7 +22,8 @@
             [shadow.cljs.devtools.server.nrepl :as nrepl]
             [shadow.cljs.devtools.server.dev-http :as dev-http]
             [shadow.cljs.devtools.server.ring-gzip :as ring-gzip]
-            [ring.middleware.resource :as ring-resource])
+            [ring.middleware.resource :as ring-resource]
+            [fulcro.server :as fs])
   (:import (io.netty.handler.ssl SslContextBuilder)
            (javax.net.ssl KeyManagerFactory)
            (java.security KeyStore)
@@ -36,6 +37,15 @@
      {:depends-on [:ssl-context :executor :out]
       :start dev-http/start
       :stop dev-http/stop}
+
+     :fulcro-parser
+     {:depends-on []
+      :start
+      (fn []
+        (fs/parser {:read fs/server-read :mutate fs/server-mutate}))
+      :stop
+      (fn [x])}
+
      :out
      {:depends-on [:config]
       :start (fn [config]

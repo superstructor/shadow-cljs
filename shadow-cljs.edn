@@ -49,15 +49,16 @@
    :modules
    {:ui
     {:entries
-     [shadow.cljs.ui.app
-      shadow.cljs.ui.bundle-info]
+     [shadow.cljs.ui.app]
      :depends-on
      #{}}}
 
    :devtools
-   {:before-load shadow.cljs.ui.bundle-info/stop
-    :after-load shadow.cljs.ui.bundle-info/start
-    :async-require true}}
+   {:before-load shadow.cljs.ui.app/stop
+    :after-load shadow.cljs.ui.app/start
+    :async-require true
+    ;; :preloads [fulcro.inspect.preload]
+    }}
 
   ;; test builds
 

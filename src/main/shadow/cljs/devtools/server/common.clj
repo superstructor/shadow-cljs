@@ -18,7 +18,7 @@
     [shadow.build.classpath :as build-classpath]
     [shadow.build.npm :as build-npm]
     [shadow.build.babel :as babel])
-  (:import (java.io ByteArrayOutputStream InputStream)
+  (:import (java.io ByteArrayOutputStream InputStream ByteArrayInputStream)
            (java.util.concurrent Executors)))
 
 (def app-config
@@ -41,6 +41,16 @@
     :start (fn [{:keys [cache-root]}]
              (io/file cache-root))
     :stop (fn [cache-root])}
+
+   :transit-read
+   {:depends-on []
+    :start
+    (fn []
+      (fn [str]
+        (let [in (ByteArrayInputStream. (.getBytes str))
+              r (transit/reader in :json)]
+          (transit/read r))))
+    :stop (fn [x])}
 
    :transit-str
    {:depends-on []

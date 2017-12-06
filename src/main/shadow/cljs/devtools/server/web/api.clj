@@ -3,6 +3,8 @@
     [clojure.edn :as edn]
     [clojure.java.shell :as sh]
     [clojure.tools.logging :as log]
+    [clojure.java.io :as io]
+    [clojure.pprint :refer (pprint)]
     [shadow.cljs.devtools.server.web.common :as common]
     [shadow.build.closure :as closure]
     [shadow.http.router :as http]
@@ -10,11 +12,28 @@
     [shadow.cljs.devtools.server.util :as server-util]
     [shadow.cljs.devtools.api :as api]
     [shadow.cljs.util :as util]
-    [clojure.java.io :as io]))
+    [fulcro.server :as fs]
+    [shadow.cljs.devtools.config :as config]))
 
-(defn index-page [req]
-  {:status 200
-   :body "foo"})
+(defmethod fs/read-root :q/builds [env _ params]
+  {:value
+   (->> (:builds (config/load-cljs-edn))
+        (vals)
+        (into []))})
+
+(defn fulcro-request [{:keys [transit-read transit-str fulcro-parser ring-request] :as req}]
+  (let [body (-> req :ring-request :body slurp transit-read)
+        result (fulcro-parser
+                 {:app req
+                  :parser fulcro-parser
+                  :ast body}
+                 body)]
+
+    (prn [:request body])
+    (let [res (fs/handle-api-request fulcro-parser {:app req :parser fulcro-parser} body)]
+      (pprint res)
+      (-> res
+          (update :body transit-str)))))
 
 (defn transform-level
   [{::repl/keys [root-id level-id lang] :as level}]
@@ -93,7 +112,7 @@
 
 (defn root* [req]
   (http/route req
-    (:GET "" index-page)
+    (:POST "" fulcro-request)
     (:GET "/repl" repl-roots)
     (:GET "/repl/{root-id:long}" repl-root root-id)
     (:GET "/repl/{root-id:long}/{level-id:long}" repl-level root-id level-id)
