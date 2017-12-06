@@ -113,12 +113,11 @@
     (fc/new-fulcro-client
       :started-callback
       (fn [app]
-        (js/console.log "fulcro started")
-        (fdf/load app :q/builds BuildItem {:target [:pages/builds :top :builds]})
         (when-let [prev-state @state-ref]
           ;; can't figure out how to restore app state otherwise
           (let [app-state (get-in app [:reconciler :config :state])]
-            (swap! app-state merge prev-state))))))
+            (swap! app-state merge prev-state)))
+        (fdf/load app :q/builds BuildItem {:target [:pages/builds :top :builds]}))))
 
   (swap! app-ref fc/mount Root "root"))
 

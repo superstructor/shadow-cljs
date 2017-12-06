@@ -210,10 +210,6 @@
                     (and default? (= :dev mode) worker-info)
                     (inject-repl-client state config)
 
-                    ;; DEVTOOLS console, it is prepended so it loads first in case anything wants to log
-                    (and default? (= :dev mode))
-                    (inject-devtools-console state config)
-
                     (and worker-info (not web-worker))
                     (update :append-js str "\nshadow.cljs.devtools.client.browser.module_loaded('" (name module-id) "');\n")
 
@@ -230,7 +226,11 @@
                     (update :append-js str "\nshadow.loader.set_loaded('" (name module-id) "');")
 
                     (= :dev mode)
-                    (inject-preloads state config)))]
+                    (inject-preloads state config)
+
+                    ;; DEVTOOLS console, it is prepended so it loads first in case anything wants to log
+                    (and default? (= :dev mode))
+                    (inject-devtools-console state config)))]
 
           (assoc mods module-id module-config)))
       {}
