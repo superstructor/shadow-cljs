@@ -14,41 +14,56 @@
 (defonce app-ref (atom nil))
 (defonce state-ref (atom nil))
 
-(defsc Foo [this {:keys [label]}]
-  {:initial-state {:page :foo :label "Foo"}
-   :query [:page :label]}
-  (html/div {} label))
 
-(defsc Bar [this {:keys [label]}]
-  {:initial-state {:page :bar :label "Bar"}
+(defmutation tx-compile [params]
+  (action [{:keys [state]}]
+    (js/console.log "tx-compile" params)
+    ))
+
+(defsc Foo [this {:keys [label]}]
+  {:initial-state {:page :pages/foo
+                   :label "Foo"}
    :query [:page :label]}
   (html/div {} label))
 
 (defsc BuildItem [this props]
   {:initial-state (fn [p] p)
-   :query [:build-id]
+   :query (fn [] ['*])
    :ident [:builds/by-id :build-id]}
-  (html/div (pr-str props)))
+  (if-not (map? props)
+    (html/tr
+      (html/td "Loading ..."))
+    (let [{:keys [build-id target]} props]
+      (html/tr
+        (html/td {} (name build-id))
+        (html/td {} (name target))
+        (html/td {} (html/button {:onClick #(fp/transact! this `[(tx-compile {:id ~build-id :mode :watch})])} "watch"))
+        (html/td {} (html/button {:onClick #(fp/transact! this `[(tx-compile {:id ~build-id :mode :dev})])} "compile"))
+        (html/td {} (html/button {:onClick #(fp/transact! this `[(tx-compile {:id ~build-id :mode :release})])} "release"))
+        ))))
 
 (def ui-build-item (fp/factory BuildItem {:keyfn :build-id}))
 
 (defsc BuildList [this {:keys [builds] :as props}]
   {:initial-state
    (fn [p]
-     {:page :build-list
-      :builds [(fp/get-initial-state BuildItem {:build-id :foo})]})
+     {:page :pages/builds
+      :builds []})
    :query
    [:page
     {:builds (fp/get-query BuildItem)}]}
 
-  (html/for [build builds]
-    (ui-build-item build)))
+  (html/div
+    (html/h1 "builds")
+    (html/table
+      (html/tbody
+        (html/for [build builds]
+          (ui-build-item build))))))
 
 (defrouter TopRouter :top-router
   (ident [this props] [(:page props) :top])
-  :build-list BuildList
-  :foo Foo
-  :bar Bar)
+  :pages/builds BuildList
+  :pages/foo Foo)
 
 (def ui-top-router (fp/factory TopRouter {}))
 
@@ -66,7 +81,9 @@
 
 (defn nav-item [this top-router id title]
   (html-nav-item
-    {:onClick #(fp/transact! this `[(fr/route-to {:handler ~id})])
+    {:onClick (fn [e]
+                (js/console.log "onclick" e id)
+                (fp/transact! this `[(fr/route-to {:handler ~id})]))
      :classes {:active (= id (get-in top-router [::fr/current-route :page]))}}
     title))
 
@@ -75,9 +92,8 @@
    (fn [p]
      (merge
        (fr/routing-tree
-         (fr/make-route :build-list [(fr/router-instruction :top-router [:build-list :top])])
-         (fr/make-route :foo [(fr/router-instruction :top-router [:foo :top])])
-         (fr/make-route :bar [(fr/router-instruction :top-router [:bar :top])]))
+         (fr/make-route :pages/builds [(fr/router-instruction :top-router [:pages/builds :top])])
+         (fr/make-route :pages/foo [(fr/router-instruction :top-router [:pages/foo :top])]))
        {:top-router (fp/get-initial-state TopRouter {})}))
 
    :query
@@ -86,9 +102,8 @@
 
   (html/div
     (html-nav-items
-      (nav-item this top-router :build-list "build-list")
-      (nav-item this top-router :foo "foo")
-      (nav-item this top-router :bar "bar"))
+      (nav-item this top-router :pages/builds "builds")
+      (nav-item this top-router :pages/foo "foo"))
 
     (ui-top-router top-router)))
 
@@ -99,7 +114,7 @@
       :started-callback
       (fn [app]
         (js/console.log "fulcro started")
-        (fdf/load app :q/builds BuildList {:target [:builds]})
+        (fdf/load app :q/builds BuildItem {:target [:pages/builds :top :builds]})
         (when-let [prev-state @state-ref]
           ;; can't figure out how to restore app state otherwise
           (let [app-state (get-in app [:reconciler :config :state])]

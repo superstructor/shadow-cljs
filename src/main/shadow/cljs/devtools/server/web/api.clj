@@ -19,6 +19,7 @@
   {:value
    (->> (:builds (config/load-cljs-edn))
         (vals)
+        (sort-by :build-id)
         (into []))})
 
 (defn fulcro-request [{:keys [transit-read transit-str fulcro-parser ring-request] :as req}]
@@ -29,11 +30,8 @@
                   :ast body}
                  body)]
 
-    (prn [:request body])
-    (let [res (fs/handle-api-request fulcro-parser {:app req :parser fulcro-parser} body)]
-      (pprint res)
-      (-> res
-          (update :body transit-str)))))
+    (-> (fs/handle-api-request fulcro-parser {:app req :parser fulcro-parser} body)
+        (update :body transit-str))))
 
 (defn transform-level
   [{::repl/keys [root-id level-id lang] :as level}]

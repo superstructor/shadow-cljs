@@ -57,7 +57,7 @@
    {:before-load shadow.cljs.ui.app/stop
     :after-load shadow.cljs.ui.app/start
     :async-require true
-    ;; :preloads [fulcro.inspect.preload]
+    :preloads [fulcro.inspect.preload]
     }}
 
   ;; test builds
