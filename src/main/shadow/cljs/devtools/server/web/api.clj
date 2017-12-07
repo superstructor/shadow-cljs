@@ -22,14 +22,18 @@
         (sort-by :build-id)
         (into []))})
 
-(defn fulcro-request [{:keys [transit-read transit-str fulcro-parser ring-request] :as req}]
-  (let [body (-> req :ring-request :body slurp transit-read)
-        result (fulcro-parser
-                 {:app req
-                  :parser fulcro-parser
-                  :ast body}
-                 body)]
+(fs/defmutation shadow.cljs.ui.app/tx-build-action [{:keys [id action] :as params}]
+  (action [{:keys [app] :as env}]
+    ;; just basic compile for now
+    (api/stop-worker id)
+    (let [config (api/get-build-config id)
+          state (api/compile* config {})]
+      {:updates
+       [{:ident [:builds/by-id id]
+         :value {:build-info (:shadow.build/build-info state)}}]})))
 
+(defn fulcro-request [{:keys [transit-read transit-str fulcro-parser ring-request] :as req}]
+  (let [body (-> req :ring-request :body slurp transit-read)]
     (-> (fs/handle-api-request fulcro-parser {:app req :parser fulcro-parser} body)
         (update :body transit-str))))
 

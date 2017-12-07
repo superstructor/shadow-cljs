@@ -9,16 +9,23 @@
     [fulcro.client.mutations :as fm :refer (defmutation)]
     [fulcro.client.primitives :as fp :refer (defsc)]
     [fulcro.client.data-fetch :as fdf]
-    ))
+    [cljs.pprint :refer (pprint)]
+    [shadow.dom :as dom]
+    ["react-dom" :as rdom]))
 
 (defonce app-ref (atom nil))
 (defonce state-ref (atom nil))
 
 
-(defmutation tx-compile [params]
+(defmutation tx-build-action [params]
   (action [{:keys [state]}]
-    (js/console.log "tx-compile" params)
-    ))
+    (js/console.log "tx-compile" params))
+  (remote [{:keys [ast]}]
+    ast))
+
+(defmutation tx-select-build [{:keys [id]}]
+  (action [{:keys [state]}]
+    (swap! state assoc-in [:pages/builds :top :selected-build] [:builds/by-id id])))
 
 (defsc Foo [this {:keys [label]}]
   {:initial-state {:page :pages/foo
@@ -26,39 +33,85 @@
    :query [:page :label]}
   (html/div {} label))
 
+(defstyled html-build-item :div [env]
+  {:cursor "pointer"
+   :padding [2 0]
+   "&:hover, &.selected"
+   {:font-weight "bold"}})
+
 (defsc BuildItem [this props]
   {:initial-state (fn [p] p)
    :query (fn [] ['*])
    :ident [:builds/by-id :build-id]}
   (if-not (map? props)
-    (html/tr
-      (html/td "Loading ..."))
-    (let [{:keys [build-id target]} props]
-      (html/tr
-        (html/td {} (name build-id))
-        (html/td {} (name target))
-        (html/td {} (html/button {:onClick #(fp/transact! this `[(tx-compile {:id ~build-id :mode :watch})])} "watch"))
-        (html/td {} (html/button {:onClick #(fp/transact! this `[(tx-compile {:id ~build-id :mode :dev})])} "compile"))
-        (html/td {} (html/button {:onClick #(fp/transact! this `[(tx-compile {:id ~build-id :mode :release})])} "release"))
-        ))))
+    (html/div "Loading ...")
+    (let [{:keys [build-id target]} props
+          {:keys [on-click selected]} (fp/get-computed props)]
+      (html-build-item
+        {:classes {:selected selected}
+         :onClick on-click}
+        (name build-id))
+      )))
 
 (def ui-build-item (fp/factory BuildItem {:keyfn :build-id}))
 
-(defsc BuildList [this {:keys [builds] :as props}]
+(defstyled section-header :div [env]
+  {:font-weight "bold"
+   :font-size "1.2em"
+   :margin-bottom 10})
+
+(defsc BuildDetail [this props]
+  {:query (fn [] ['*])
+   :ident [:builds/by-id :build-id]}
+  (let [{:keys [build-id]} props]
+    (html/div
+      (section-header (name build-id))
+      (html/div
+        (html/button {:onClick #(fp/transact! this `[(tx-build-action {:id ~build-id :action :watch})])} "watch")
+        (html/button {:onClick #(fp/transact! this `[(tx-build-action {:id ~build-id :action :compile})])} "compile")
+        (html/button {:onClick #(fp/transact! this `[(tx-build-action {:id ~build-id :action :release})])} "release"))
+      (html/pre
+        (with-out-str
+          (pprint props))))))
+
+(def ui-build-detail (fp/factory BuildDetail {:keyfn :build-id}))
+
+(defstyled html-split :div [env]
+  {:display "flex"})
+
+(defstyled html-build-list-container :div [env]
+  {:width 170})
+
+(defstyled html-build-detail-container :div [env]
+  {:flex 1})
+
+(defsc BuildList [this props]
   {:initial-state
    (fn [p]
      {:page :pages/builds
-      :builds []})
+      :builds []
+      :selected-build nil})
    :query
    [:page
-    {:builds (fp/get-query BuildItem)}]}
+    {:builds (fp/get-query BuildItem)}
+    {:selected-build (fp/get-query BuildDetail)}]}
 
-  (html/div
-    (html/h1 "builds")
-    (html/table
-      (html/tbody
+  (let [{:keys [builds selected-build]} props]
+    (html-split
+      (html-build-list-container
+        (section-header "builds")
         (html/for [build builds]
-          (ui-build-item build))))))
+          (ui-build-item
+            (fp/computed build
+              {:selected (and selected-build (= (:build-id build) (:build-id selected-build)))
+               :on-click #(fp/transact! this `[(tx-select-build {:id ~(:build-id build)})])
+               }))))
+      (html-build-detail-container
+        (if-not selected-build
+          (html/div
+            (section-header "no build selected")
+            (html/div "<- select a build"))
+          (ui-build-detail selected-build))))))
 
 (defrouter TopRouter :top-router
   (ident [this props] [(:page props) :top])
@@ -111,18 +164,32 @@
   (reset! app-ref
     ;; I really don't like putting this in a defonce seems to break often
     (fc/new-fulcro-client
+      :mutation-merge
+      (fn [state msym {:keys [updates] :as return-value}]
+        (reduce
+          (fn [state {:keys [ident value]}]
+            (update-in state ident merge value))
+          state
+          updates))
+
       :started-callback
       (fn [app]
         (when-let [prev-state @state-ref]
           ;; can't figure out how to restore app state otherwise
           (let [app-state (get-in app [:reconciler :config :state])]
             (swap! app-state merge prev-state)))
+
+        #_(fulcro.client.primitives/transact! (:reconciler (fulcro.inspect.core/global-inspector))
+            [:fulcro.inspect.core/floating-panel "main"]
+            [`(fulcro.client.mutations/set-props {:ui/visible? true})])
+
         (fdf/load app :q/builds BuildItem {:target [:pages/builds :top :builds]}))))
 
   (swap! app-ref fc/mount Root "root"))
 
 (defn stop []
-  (reset! state-ref @(get-in @app-ref [:reconciler :config :state])))
+  (reset! state-ref @(get-in @app-ref [:reconciler :config :state]))
+  (rdom/unmountComponentAtNode (dom/by-id "root")))
 
 (defn get-state []
   @(get-in @app-ref [:reconciler :config :state]))
