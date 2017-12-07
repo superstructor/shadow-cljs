@@ -77,7 +77,7 @@
     :dependencies
     [[reagent "0.8.0-alpha2"]
      [funcool/promesa "1.9.0"]
-     [fulcrologic/fulcro "2.0.0-beta4"]
+     [fulcrologic/fulcro "2.0.0-beta5"]
      [fulcrologic/fulcro-inspect "0.2.0-SNAPSHOT"]
 
      #_ [cider/cider-nrepl "0.16.0-SNAPSHOT"]
