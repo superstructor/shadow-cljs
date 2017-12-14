@@ -6,6 +6,7 @@
     [shadow.server.assets :as assets]
     [shadow.cljs.devtools.server.web.common :as common]
     [shadow.cljs.devtools.server.web.api :as web-api]
+    [shadow.cljs.devtools.server.web.ui :as web-ui]
     [shadow.cljs.devtools.server.web.release-snapshots :as release-snapshots]
     [shadow.cljs.devtools.server.worker.ws :as ws]
     [clojure.java.io :as io]
@@ -52,4 +53,5 @@
     (:ANY "^/release-snapshots" release-snapshots/root)
     (:ANY "^/api" web-api/root)
     (:ANY "^/worker" ws/process)
+    (:ANY "^/ui" web-ui/process)
     common/not-found))
