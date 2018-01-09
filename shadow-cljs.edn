@@ -319,6 +319,17 @@
    :modules
    {:main {:entries [demo.foreign]}}}
 
+  :test-i18n
+  {:target :browser
+   :output-dir "out/demo-i18n/js"
+   :asset-path "/js"
+
+   :i18n-options
+   {:messages-file "messages.pot"}
+
+   :modules
+   {:main {:entries [demo.i18n]}}}
+
   :npm
   {:target :npm-module
    :output-dir "out/demo-npm/lib"

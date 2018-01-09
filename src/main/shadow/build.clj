@@ -1,19 +1,21 @@
 (ns shadow.build
   (:refer-clojure :exclude (compile flush))
-  (:require [clojure.java.io :as io]
-            [clojure.spec.alpha :as s]
-            [clojure.string :as str]
-            [shadow.build.api :as build-api]
-            [shadow.build.config :as config]
-            [shadow.build.closure :as closure]
-            [shadow.build.warnings :as warnings]
-            [shadow.build.modules :as modules]
+  (:require
+    [clojure.java.io :as io]
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [shadow.build.api :as build-api]
+    [shadow.build.config :as config]
+    [shadow.build.closure :as closure]
+    [shadow.build.warnings :as warnings]
+    [shadow.build.modules :as modules]
+    [shadow.build.i18n :as i18n]
 
     ;; FIXME: move these
-            [shadow.cljs.devtools.cljs-specs]
-            [shadow.build.data :as data]
-            [clojure.tools.logging :as log]
-            [shadow.build.log :as build-log]))
+    [shadow.cljs.devtools.cljs-specs]
+    [shadow.build.data :as data]
+    [clojure.tools.logging :as log]
+    [shadow.build.log :as build-log]))
 
 (defn enhance-warnings
   "adds source excerpts to warnings if line information is available"
@@ -194,7 +196,7 @@
          (some? target)]
    :post [(build-api/build-state? %)]}
 
-  (let [{:keys [build-options closure-defines compiler-options js-options] :as config}
+  (let [{:keys [build-options i18n-options closure-defines compiler-options js-options] :as config}
         (config-merge config mode)
 
         target-fn
@@ -246,6 +248,9 @@
 
             build-options
             (build-api/with-build-options build-options)
+
+            i18n-options
+            (assoc :i18n-options i18n-options)
 
             (.exists externs-file)
             (assoc :externs-file externs-file)
@@ -313,7 +318,9 @@
   [state]
   {:pre [(build-api/build-state? state)]
    :post [(build-api/build-state? %)]}
-  (process-stage state :flush true))
+  (-> state
+      (i18n/process)
+      (process-stage :flush true)))
 
 
 (defn log [state log-event]

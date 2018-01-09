@@ -382,10 +382,9 @@
               :modules
               {:base
                {:entries [demo.i18n]}}}
-            {})]
+            {})
 
-      (prn (get-in state [:compiler-env :cljs.analyzer/namespaces 'demo.i18n :shadow.i18n/strings]))
-      )
+          ])
     (catch Exception ex
       (errors/user-friendly-error ex))))
 

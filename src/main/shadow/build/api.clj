@@ -83,6 +83,9 @@
        :build-options
        default-build-options
 
+       :i18n-options
+       {}
+
        :js-options
        default-js-options
 
