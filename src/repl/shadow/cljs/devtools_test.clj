@@ -369,6 +369,26 @@
     (catch Exception ex
       (errors/user-friendly-error ex))))
 
+(deftest test-build-with-i18n
+  (try
+    (let [state
+          (api/compile*
+            '{:build-id :browser
+              :target :browser
+
+              :output-dir "target/test-build-with-i18n/js"
+              :asset-path "/js"
+
+              :modules
+              {:base
+               {:entries [demo.i18n]}}}
+            {})]
+
+      (prn (get-in state [:compiler-env :cljs.analyzer/namespaces 'demo.i18n :shadow.i18n/strings]))
+      )
+    (catch Exception ex
+      (errors/user-friendly-error ex))))
+
 (defn print-js [state provides]
   (doseq [provide provides]
     (let [rc
