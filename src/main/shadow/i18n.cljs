@@ -2,9 +2,10 @@
   (:require-macros [shadow.i18n]))
 
 (def translations-ref (atom {}))
+(def language-ref (atom nil))
 
 (defn get-text
   ([key]
-   (get-in @translations-ref key key))
+   (get @translations-ref [@language-ref key nil] key))
   ([ctx key]
-   (get-in @translations-ref [key ctx] key)))
+   (get @translations-ref [@language-ref key ctx] key)))

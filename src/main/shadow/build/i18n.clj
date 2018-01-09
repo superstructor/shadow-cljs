@@ -1,6 +1,7 @@
 (ns shadow.build.i18n
   (:require [shadow.build.data :as data]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (defn process [state]
   (let [messages-file
@@ -23,11 +24,15 @@
             (with-out-str
               (doseq [[{:keys [msg context] :as tr} occurences] de-duped]
                 (println)
-                (doseq [{:keys [ns line column]} occurences]
-                  (println (str "#: " ns ":" line ":" column)))
-                (println (str "msgid " (pr-str msg)))
+                (println
+                  (str "#: "
+                       (->> occurences
+                            (map (fn [{:keys [ns line column]}]
+                                   (str ns ":" line ":" column)))
+                            (str/join " "))))
                 (when (seq context)
                   (println (str "msgctxt " (pr-str context))))
+                (println (str "msgid " (pr-str msg)))
                 (println (str "msgstr \"\""))
                 ))
 

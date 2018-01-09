@@ -4,6 +4,10 @@
     ))
 
 (tr "translate me plz")
+(tr "translate me plz")
+(tr "translate me plz")
+(tr "translate me plz")
+(tr "translate me plz")
 
 (trc "foo" "foo?")
 (trc "bar" "foo?")
