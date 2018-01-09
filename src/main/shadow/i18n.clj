@@ -18,4 +18,23 @@
          :column column}]
 
     (swap! env/*compiler* update-in [::ana/namespaces current-ns ::strings] vec-conj string-data))
+
   `(get-text ~msg))
+
+(defmacro trc [ctx msg]
+  (let [{:keys [line column]}
+        (meta &form)
+
+        current-ns
+        (-> &env :ns :name)
+
+        string-data
+        {:msg msg
+         :context ctx
+         :ns current-ns
+         :line line
+         :column column}]
+
+    (swap! env/*compiler* update-in [::ana/namespaces current-ns ::strings] vec-conj string-data))
+
+  `(get-text ~ctx ~msg))

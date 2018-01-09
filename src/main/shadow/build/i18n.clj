@@ -26,6 +26,8 @@
                 (doseq [{:keys [ns line column]} occurences]
                   (println (str "#: " ns ":" line ":" column)))
                 (println (str "msgid " (pr-str msg)))
+                (when (seq context)
+                  (println (str "msgctxt " (pr-str context))))
                 (println (str "msgstr \"\""))
                 ))
 

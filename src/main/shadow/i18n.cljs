@@ -3,5 +3,8 @@
 
 (def translations-ref (atom {}))
 
-(defn get-text [key]
-  (get-in @translations-ref key key))
+(defn get-text
+  ([key]
+   (get-in @translations-ref key key))
+  ([ctx key]
+   (get-in @translations-ref [key ctx] key)))
