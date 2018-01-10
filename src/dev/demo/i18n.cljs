@@ -1,13 +1,10 @@
 (ns demo.i18n
-  (:require
-    [shadow.i18n :refer (tr trc)]
-    ))
+  (:require [cljs.i18n :refer (tr)]))
 
 (tr "translate me plz")
 (tr "translate me plz")
-(tr "translate me plz")
-(tr "translate me plz")
-(tr "translate me plz")
 
-(trc "foo" "foo?")
-(trc "bar" "foo?")
+(tr ["foo?" "foo"])
+(tr ["foo?" "bar"])
+
+(tr "foo {thing} bar" :thing "yo")
