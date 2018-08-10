@@ -27,7 +27,6 @@
    ;; [org.clojure/core.specs.alpha "0.1.10"]
 
    [org.clojure/data.json "0.2.6"]
-   [org.clojure/java.classpath "0.2.3"]
    [org.clojure/tools.cli "0.3.7"]
    [org.clojure/tools.reader "1.3.0"]
    [nrepl "0.4.4"]
@@ -111,4 +110,5 @@
     :source-paths
     ["src/dev"
      "src/gen"
-     "src/test"]}})
+     "src/test"
+     "test-project/src/main"]}})
