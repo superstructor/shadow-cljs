@@ -173,7 +173,6 @@
             (into args))]
 
     (log "shadow-cljs - starting ...")
-    (prn cli-args)
     (run! project-root "java" cli-args {})))
 
 ;; https://github.com/shadow-cljs/launcher/releases/download/1.2.0/shadow-cljs-launcher-1.2.0.jar

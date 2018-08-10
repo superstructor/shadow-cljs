@@ -97,7 +97,10 @@
    :cljs
    {:java-opts ^:replace ["-XX:-OmitStackTraceInFastThrow"]
     :dependencies
-    [[cider/cider-nrepl "0.18.0"]]
+    [[cider/cider-nrepl "0.18.0"]
+     ;; just so the CI build has this downloaded
+     ;; and cached before compiling the test-project
+     [reagent "0.8.1"]]
     :repl-options
     {:init-ns shadow.user
      :nrepl-middleware
