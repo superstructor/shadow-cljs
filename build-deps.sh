@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 # CI-only
 # installing deps so they can be cached
 
