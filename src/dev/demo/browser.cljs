@@ -31,6 +31,12 @@
            #(re-matches #"#[a-fA-F0-9]+" %)
            #(or (= (count %) 7) (= (count %) 4)))))
 
+(defn fn-using-case [thing]
+  (case thing
+    :foo :foo
+    bar :bar
+    :yo))
+
 #_(go (<! (async/timeout 500))
       (js/console.log "go!"))
 
